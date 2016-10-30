@@ -13,7 +13,7 @@ class ViewController: UIViewController
 {
 	@IBOutlet var numpadContainer: UIView!
 	
-	var numPad: ImonggoNumPad!
+	var numPad: FormattedNumPad!
 	
 	override func viewDidLoad() {
 		super.viewDidLoad()

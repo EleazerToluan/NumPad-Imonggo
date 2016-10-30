@@ -256,12 +256,12 @@ extension CGSize {
 }
 
 // custom
-public class ImonggoNumPad: UIView,  NumPadDelegate, NumPadDataSource
+public class FormattedNumPad: UIView,  NumPadDelegate, NumPadDataSource
 {
 	var dataSource: NumPadDataSource? = nil
+	var numberFormatter: NSNumberFormatter!
 	
 	private let borderColor = UIColor(white: 0.9, alpha: 1)
-	private var rawValue: String = ""
 	
 	private lazy var containerView: UIView = { [unowned self] in
 		let containerView = UIView()
@@ -278,7 +278,7 @@ public class ImonggoNumPad: UIView,  NumPadDelegate, NumPadDataSource
 		textField.textAlignment = .Right
 		textField.textColor = UIColor(white: 0.3, alpha: 1)
 		textField.font = .systemFontOfSize(40)
-		textField.placeholder = "0"
+		textField.placeholder = self.numberFormatter.stringFromNumber(0.0)
 		textField.enabled = false
 		self.containerView.addSubview(textField)
 		return textField
@@ -305,19 +305,40 @@ public class ImonggoNumPad: UIView,  NumPadDelegate, NumPadDataSource
 	
 	required public init?(coder aDecoder: NSCoder) {
 		super.init(coder: aDecoder)
-		
-		print("init")
 		self.commonInit()
 	}
 	
 	func commonInit()
 	{
+		self.numberFormatter = NSNumberFormatter()
+		self.numberFormatter?.numberStyle = .DecimalStyle
+		self.numberFormatter?.maximumFractionDigits = 2
+		self.numberFormatter?.minimumFractionDigits = 2
+		self.numberFormatter?.decimalSeparator = ","
+		self.numberFormatter?.groupingSeparator = "."
+		self.numberFormatter?.currencySymbol = "P"
+	
 		let views = ["containerView": containerView, "textField": textField, "numPad": numPad]
 		self.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("H:|[containerView]|", options: [], metrics: nil, views: views))
 		self.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[containerView]|", options: [], metrics: nil, views: views))
 		containerView.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("H:|-20-[textField]-20-|", options: [], metrics: nil, views: views))
 		containerView.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("H:|[numPad]|", options: [], metrics: nil, views: views))
 		containerView.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|-20-[textField(==60)][numPad]|", options: [], metrics: nil, views: views))
+	}
+	
+	func sanitizedString(string: String) -> String
+	{
+		let set = NSCharacterSet.decimalDigitCharacterSet().invertedSet
+		return string.componentsSeparatedByCharactersInSet(set).joinWithSeparator("")
+	}
+	
+	var doubleValue: Double
+	{
+		let rawString = textField.text!.isEmpty ? "0.0" : textField.text!
+		let sanitizedString = self.sanitizedString(rawString)
+		let digits = NSDecimalNumber(string: sanitizedString)
+		let decimalPlace = NSDecimalNumber(double: pow(10.0, Double(self.numberFormatter.minimumFractionDigits)))
+		return digits.decimalNumberByDividingBy(decimalPlace).doubleValue
 	}
 	
 	public func numPad(numPad: NumPad, itemTapped item: Item, atPosition position: Position)
@@ -332,15 +353,16 @@ public class ImonggoNumPad: UIView,  NumPadDelegate, NumPadDataSource
 		default:
 			
 			let item = numPad.item(forPosition: position)!
-			self.rawValue = textField.text! + item.title!
-			if Int(rawValue) == 0
+			let rawString = "\(self.doubleValue)" + item.title!
+			
+			if Int(rawString) == 0
 			{
 				textField.text = nil
-				rawValue = ""
 			}
 			else
 			{
-				textField.text = rawValue
+				textField.text = rawString
+				textField.text = self.numberFormatter.stringFromNumber(self.doubleValue)
 			}
 		}
 	}
