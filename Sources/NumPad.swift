@@ -279,12 +279,6 @@ public class FormattedNumPad: UIView,  NumPadDelegate, NumPadDataSource
 			let views = ["containerView": containerView, "numPad": numPad]
 			self.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[containerView]|", options: [], metrics: nil, views: views))
 			containerView.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[numPad]|", options: [], metrics: nil, views: views))
-		   /*
-			let views = ["containerView": containerView, "numPad": numPad]
-			self.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("H:|[containerView]|", options: [], metrics: nil, views: views))
-			self.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[containerView]|", options: [], metrics: nil, views: views))
-			containerView.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("H:|[numPad]|", options: [], metrics: nil, views: views))
-			*/
 		}
 	}
 	
