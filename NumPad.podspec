@@ -7,14 +7,14 @@
 #
 
 Pod::Spec.new do |s|
-    s.name             = "NumPad"
+    s.name             = "NumPad-Imonggo"
     s.version          = "1.0.11"
     s.summary          = "Number Pad"
     s.homepage         = "https://github.com/efremidze/NumPad"
     s.license          = 'MIT'
     s.author           = { "Lasha Efremidze" => "efremidzel@hotmail.com" }
     s.ios.deployment_target = '8.0'
-    s.source           = { :git => 'https://github.com/efremidze/NumPad.git', :tag => s.version }
+    s.source           = { :git => 'https://github.com/allanmacatingrao/NumPad-Imonggo.git', :tag => s.version }
     s.source_files     = "Sources/*.swift"
     s.requires_arc     = true
 end
