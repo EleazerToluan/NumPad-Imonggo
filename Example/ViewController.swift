@@ -11,17 +11,17 @@ import NumPad
 
 class ViewController: UIViewController
 {
-	@IBOutlet var numpadContainer: UIView!
-	
-	var numPad: FormattedNumPad!
+	@IBOutlet var numpadContainer: FormattedNumPad!
+	@IBOutlet var externalTF: UITextField!
 	
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		
+		self.numpadContainer.externalTextField = self.externalTF
 	}
 	
 	override func viewDidAppear(animated: Bool) {
 		super.viewDidAppear(animated)
-		
+		self.numpadContainer.doubleValue = 7.00
 	}
 }

@@ -21,9 +21,18 @@
                                 <rect key="frame" x="82" y="126" width="290" height="341"/>
                                 <color key="backgroundColor" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
                             </view>
+                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="bhg-Fw-beF">
+                                <rect key="frame" x="82" y="88" width="290" height="30"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                <textInputTraits key="textInputTraits"/>
+                            </textField>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                     </view>
+                    <connections>
+                        <outlet property="externalTF" destination="bhg-Fw-beF" id="UAD-g8-t4o"/>
+                        <outlet property="numpadContainer" destination="Fyw-0F-5Ih" id="ow5-9f-4fb"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="CPF-R6-MZW" sceneMemberID="firstResponder"/>
             </objects>
