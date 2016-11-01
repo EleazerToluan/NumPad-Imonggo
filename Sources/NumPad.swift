@@ -78,6 +78,12 @@ public class NumPad: UIView {
 	                                [  "4", "5", "6" ],
 	                                [  "1", "2", "3" ],
 	                                [  "C", "0", "00"]]
+	{
+		didSet
+		{
+			self.collectionView.reloadData()
+		}
+	}
 	
 	lazy var collectionView: UICollectionView = { [unowned self] in
 		let layout = UICollectionViewFlowLayout()
@@ -263,10 +269,32 @@ extension CGSize {
 }
 
 // custom
+// MARK: - NumPadDelegate
+public protocol FormattedNumPadDelegate: class {
+	
+	/// The item was tapped handler.
+	func numPad(numPad: FormattedNumPad, valueChanged value: Double)
+}
+
+
 public class FormattedNumPad: UIView,  NumPadDelegate, NumPadDataSource
 {
-	public var dataSource: NumPadDataSource? = nil
+	public var delegate: FormattedNumPadDelegate? = nil
 	public var numberFormatter: NSNumberFormatter!
+	public var autoDecimal: Bool = true
+	
+	public var buttonTitles: [[String]]
+	{
+		set
+		{
+			numPad.buttonTitles = newValue
+		}
+		
+		get
+		{
+			return numPad.buttonTitles
+		}
+	}
 	
 	public var externalTextField: UITextField? = nil
 	{
@@ -368,12 +396,18 @@ public class FormattedNumPad: UIView,  NumPadDelegate, NumPadDataSource
 		}
 		get
 		{
-		
-			let rawString = self.editingTextField.text!.isEmpty ? "0.0" : self.editingTextField.text!
-			let sanitizedString = self.sanitizedString(rawString)
+			let rawString = self.editingTextField.text!.isEmpty ? "0" : self.editingTextField.text!
+			let sanitizedString = self.autoDecimal ? self.sanitizedString(rawString) : rawString
 			let digits = NSDecimalNumber(string: sanitizedString)
-			let decimalPlace = NSDecimalNumber(double: pow(10.0, Double(self.numberFormatter.minimumFractionDigits)))
-			return digits.decimalNumberByDividingBy(decimalPlace).doubleValue
+			
+			if self.autoDecimal
+			{
+				let decimalPlace = NSDecimalNumber(double: pow(10.0, Double(self.numberFormatter.minimumFractionDigits)))
+				return digits.decimalNumberByDividingBy(decimalPlace).doubleValue
+			}
+			
+			print("Sanitized String: \(sanitizedString)")
+			return self.numberFormatter.numberFromString(sanitizedString)!.doubleValue
 		}
 	}
 	
@@ -391,22 +425,55 @@ public class FormattedNumPad: UIView,  NumPadDelegate, NumPadDataSource
 		{
 		case "C":
 			self.editingTextField.text = nil
+			break
 			
 		default:
 			
-			let item = numPad.item(forPosition: position)!
-			let rawString = "\(self.doubleValue)" + item.title!
-			
-			if Int(rawString) == 0
+			if self.autoDecimal
 			{
-				self.editingTextField.text = nil
+				let item = numPad.item(forPosition: position)!
+				let rawString = "\(self.doubleValue)" + item.title!
+				
+				if Int(rawString) == 0
+				{
+					self.editingTextField.text = nil
+				}
+				else
+				{
+					self.editingTextField.text = rawString
+					self.editingTextField.text = self.numberFormatter.stringFromNumber(self.doubleValue)
+				}
 			}
+			
+			// raw
 			else
 			{
-				self.editingTextField.text = rawString
-				self.editingTextField.text = self.numberFormatter.stringFromNumber(self.doubleValue)
+				let item = numPad.item(forPosition: position)!
+				var rawString = self.editingTextField.text! + item.title!
+			
+				if item.title! == self.numberFormatter.decimalSeparator &&
+				   self.editingTextField.text!.containsString(self.numberFormatter.decimalSeparator)
+				{
+					return
+				}
+				
+				if rawString == self.numberFormatter.decimalSeparator
+				{
+					rawString = "0" + item.title!
+				}
+			
+				if Int(rawString) == 0
+				{
+					self.editingTextField.text = nil
+				}
+				else
+				{
+					self.editingTextField.text = rawString
+				}
 			}
 		}
+		
+		self.delegate?.numPad(self, valueChanged: self.doubleValue)
 	}
 	
 	public func numPad(numPad: NumPad, itemAtPosition position: Position) -> Item {

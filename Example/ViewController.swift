@@ -9,7 +9,7 @@
 import UIKit
 import NumPad
 
-class ViewController: UIViewController
+class ViewController: UIViewController, FormattedNumPadDelegate
 {
 	@IBOutlet var numpadContainer: FormattedNumPad!
 	@IBOutlet var externalTF: UITextField!
@@ -22,6 +22,14 @@ class ViewController: UIViewController
 	
 	override func viewDidAppear(animated: Bool) {
 		super.viewDidAppear(animated)
-		self.numpadContainer.doubleValue = 7.00
+		self.numpadContainer.buttonTitles = [["1", "2", "3"], ["C", ",", ""]]
+		self.numpadContainer.delegate = self
+		self.numpadContainer.autoDecimal = false
+	}
+	
+	func numPad(numPad: FormattedNumPad, valueChanged value: Double)
+	{
+		// numPad.externalTextField?.text = "\(numPad.externalTextField!.text!)%"
+		print("double value: \(value)")
 	}
 }
