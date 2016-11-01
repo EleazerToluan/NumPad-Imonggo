@@ -265,8 +265,8 @@ extension CGSize {
 // custom
 public class FormattedNumPad: UIView,  NumPadDelegate, NumPadDataSource
 {
-	var dataSource: NumPadDataSource? = nil
-	var numberFormatter: NSNumberFormatter!
+	public var dataSource: NumPadDataSource? = nil
+	public var numberFormatter: NSNumberFormatter!
 	
 	public var externalTextField: UITextField? = nil
 	{
