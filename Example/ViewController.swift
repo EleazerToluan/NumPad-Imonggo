@@ -22,9 +22,9 @@ class ViewController: UIViewController, FormattedNumPadDelegate
 	
 	override func viewDidAppear(animated: Bool) {
 		super.viewDidAppear(animated)
-		self.numpadContainer.buttonTitles = [["1", "2", "3"], ["C", ",", ""]]
+		// self.numpadContainer.buttonTitles = [["1", "2", "3"], ["C", ",", ""]]
 		self.numpadContainer.delegate = self
-		self.numpadContainer.autoDecimal = false
+		// self.numpadContainer.autoDecimal = false
 	}
 	
 	func numPad(numPad: FormattedNumPad, valueChanged value: Double)

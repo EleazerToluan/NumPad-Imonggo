@@ -369,8 +369,8 @@ public class FormattedNumPad: UIView,  NumPadDelegate, NumPadDataSource
 		self.numberFormatter?.numberStyle = .DecimalStyle
 		self.numberFormatter?.maximumFractionDigits = 2
 		self.numberFormatter?.minimumFractionDigits = 2
-		self.numberFormatter?.decimalSeparator = ","
-		self.numberFormatter?.groupingSeparator = "."
+		self.numberFormatter?.decimalSeparator = "."
+		self.numberFormatter?.groupingSeparator = ","
 		self.numberFormatter?.currencySymbol = "P"
 		
 		let views = ["containerView": containerView, "textField": textField, "numPad": numPad]
@@ -394,6 +394,7 @@ public class FormattedNumPad: UIView,  NumPadDelegate, NumPadDataSource
 				self.editingTextField.text = self.numberFormatter.stringFromNumber(newValue)
 			}
 		}
+		
 		get
 		{
 			let rawString = self.editingTextField.text!.isEmpty ? "0" : self.editingTextField.text!
@@ -432,7 +433,7 @@ public class FormattedNumPad: UIView,  NumPadDelegate, NumPadDataSource
 			if self.autoDecimal
 			{
 				let item = numPad.item(forPosition: position)!
-				let rawString = "\(self.doubleValue)" + item.title!
+				let rawString = self.editingTextField.text! + item.title!
 				
 				if Int(rawString) == 0
 				{
