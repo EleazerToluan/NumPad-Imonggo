@@ -273,8 +273,10 @@ public class FormattedNumPad: UIView,  NumPadDelegate, NumPadDataSource
 		didSet
 		{
 			// remove internal Text field
-			
 			self.textField.removeFromSuperview()
+			
+			if self.textField.tag == 1 { return }
+			self.textField.tag = 1
 			
 			let views = ["containerView": containerView, "numPad": numPad]
 			self.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[containerView]|", options: [], metrics: nil, views: views))
