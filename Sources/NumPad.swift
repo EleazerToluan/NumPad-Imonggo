@@ -165,6 +165,7 @@ extension CollectionView: UICollectionViewDataSource {
 	}
 	
 	func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
+	
 		let position = numPad.position(forIndexPath: indexPath)
 		let cell = collectionView.dequeueReusableCellWithReuseIdentifier(String(Cell), forIndexPath: indexPath) as! Cell
 		let item = numPad.dataSource?.numPad(numPad, itemAtPosition: position) ?? Item()
@@ -204,8 +205,10 @@ extension CollectionView: UICollectionViewDelegateFlowLayout {
 class Cell: UICollectionViewCell {
 	
 	lazy var button: UIButton = { [unowned self] in
+	
 		let button = UIButton(type: .Custom)
 		button.titleLabel?.textAlignment = .Center
+		button.titleLabel?.numberOfLines = 4
 		button.translatesAutoresizingMaskIntoConstraints = false
 		button.addTarget(self, action: #selector(_buttonTapped), forControlEvents: .TouchUpInside)
 		self.contentView.addSubview(button)
@@ -215,15 +218,13 @@ class Cell: UICollectionViewCell {
 		return button
 		}()
 	
-	var item: Item! {
+	var item: Item!
+	{
 		didSet
 		{
 			button.setTitle(item.title, forState: .Normal)
-			
 			button.setTitleColor(item.titleColor, forState: .Normal)
-			
 			button.titleLabel?.font = item.font
-			
 			button.setImage(item.image, forState: .Normal)
 			
 			var image = item.backgroundColor.map { UIImage(color: $0) }
@@ -232,6 +233,7 @@ class Cell: UICollectionViewCell {
 			button.setBackgroundImage(image, forState: .Highlighted)
 			button.setBackgroundImage(image, forState: .Selected)
 			button.tintColor = item.titleColor
+
 		}
 	}
 	
@@ -265,7 +267,6 @@ extension CGSize {
 	func isZero() -> Bool {
 		return CGSizeEqualToSize(self, CGSize())
 	}
-	
 }
 
 // custom
@@ -274,6 +275,7 @@ public protocol FormattedNumPadDelegate: class {
 	
 	/// The item was tapped handler.
 	func numPad(numPad: FormattedNumPad, valueChanged value: Double)
+	func numPad(numPad: FormattedNumPad, buttonTapped title: String)
 }
 
 
@@ -385,7 +387,7 @@ public class FormattedNumPad: UIView,  NumPadDelegate, NumPadDataSource
 	{
 		set
 		{
-			if newValue == 0
+			if newValue == 0.0
 			{
 				self.editingTextField.text = nil
 			}
@@ -429,18 +431,32 @@ public class FormattedNumPad: UIView,  NumPadDelegate, NumPadDataSource
 			break
 			
 		default:
+		
+			let item = numPad.item(forPosition: position)!
+			var rawString = self.editingTextField.text! + item.title!
 			
+			// non numeric
+			print("\(Double(item.title!))")
+			if Double(item.title!) == nil
+			{
+				self.delegate?.numPad(self, buttonTapped: item.title!)
+				return
+			}
+		
 			if self.autoDecimal
 			{
-				let item = numPad.item(forPosition: position)!
-				let rawString = self.editingTextField.text! + item.title!
-				
-				if Int(rawString) == 0
+				if Double(rawString) == 0.0
 				{
 					self.editingTextField.text = nil
+					
 				}
 				else
 				{
+					if item.title! == self.numberFormatter.decimalSeparator
+					{
+						rawString = "0" + item.title!
+					}
+					
 					self.editingTextField.text = rawString
 					self.editingTextField.text = self.numberFormatter.stringFromNumber(self.doubleValue)
 				}
@@ -449,9 +465,6 @@ public class FormattedNumPad: UIView,  NumPadDelegate, NumPadDataSource
 			// raw
 			else
 			{
-				let item = numPad.item(forPosition: position)!
-				var rawString = self.editingTextField.text! + item.title!
-			
 				if item.title! == self.numberFormatter.decimalSeparator &&
 				   self.editingTextField.text!.containsString(self.numberFormatter.decimalSeparator)
 				{
@@ -474,16 +487,32 @@ public class FormattedNumPad: UIView,  NumPadDelegate, NumPadDataSource
 			}
 		}
 		
+		self.delegate?.numPad(self, buttonTapped: item.title!)
 		self.delegate?.numPad(self, valueChanged: self.doubleValue)
 	}
 	
 	public func numPad(numPad: NumPad, itemAtPosition position: Position) -> Item {
+		
 		var item = Item()
 		item.title = numPad.buttonTitles[position.row][position.column]
-		item.titleColor =  item.title == "C" ? .orangeColor() : UIColor(white: 0.3, alpha: 1)
-		item.font = .systemFontOfSize(20)
 		
-		// item.backgroundColor = colors[position.column]
+		if let _ = Double(item.title!)
+		{
+			item.titleColor = UIColor(white: 0.3, alpha: 1)
+		}
+		
+		else if item.title! == "C"
+		{
+			item.titleColor = .orangeColor()
+		}
+		
+		else
+		{
+			item.titleColor = UIColor(white: 1, alpha: 1)
+			item.backgroundColor = UIColor.orangeColor()
+		}
+		
+		item.font = .systemFontOfSize(20)
 		return item
 	}
 }

@@ -20,9 +20,18 @@ class ViewController: UIViewController, FormattedNumPadDelegate
 		self.numpadContainer.externalTextField = self.externalTF
 	}
 	
-	override func viewDidAppear(animated: Bool) {
+	override func viewDidAppear(animated: Bool)
+	{
 		super.viewDidAppear(animated)
-		// self.numpadContainer.buttonTitles = [["1", "2", "3"], ["C", ",", ""]]
+		
+		self.numpadContainer.buttonTitles = [["7", "8", "9"],
+														 ["4", "5", "6"],
+														 ["1", "2", "3"],
+		                                     ["0", "00", "10"],
+														 ["20", "50", "100"],
+														 ["200", "500", "1000"],
+														 ["C", ".50", ".25"],
+														 ["Cash", "Bread\nCert.", "Gift\nCert"]]
 		self.numpadContainer.delegate = self
 		// self.numpadContainer.autoDecimal = false
 	}
@@ -30,6 +39,11 @@ class ViewController: UIViewController, FormattedNumPadDelegate
 	func numPad(numPad: FormattedNumPad, valueChanged value: Double)
 	{
 		// numPad.externalTextField?.text = "\(numPad.externalTextField!.text!)%"
-		print("double value: \(value)")
+		print("double value: '\(value)'")
+	}
+	
+	func numPad(numPad: FormattedNumPad, buttonTapped title: String)
+	{
+		print("title: \(title)")
 	}
 }
