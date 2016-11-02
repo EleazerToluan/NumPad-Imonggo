@@ -298,6 +298,7 @@ public class FormattedNumPad: UIView,  NumPadDelegate, NumPadDataSource
 		}
 	}
 	
+	private var clear: Bool = true
 	public var externalTextField: UITextField? = nil
 	{
 		didSet
@@ -311,6 +312,8 @@ public class FormattedNumPad: UIView,  NumPadDelegate, NumPadDataSource
 			let views = ["containerView": containerView, "numPad": numPad]
 			self.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[containerView]|", options: [], metrics: nil, views: views))
 			containerView.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[numPad]|", options: [], metrics: nil, views: views))
+			
+			self.clear = true
 		}
 	}
 	
@@ -431,6 +434,13 @@ public class FormattedNumPad: UIView,  NumPadDelegate, NumPadDataSource
 			break
 			
 		default:
+		
+			if clear
+			{
+				self.editingTextField.text = nil
+				self.clear = false
+			}
+			
 		
 			let item = numPad.item(forPosition: position)!
 			var rawString = self.editingTextField.text! + item.title!
