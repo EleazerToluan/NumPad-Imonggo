@@ -61,7 +61,12 @@ public protocol NumPadDelegate: class {
 
 public extension NumPadDelegate {
 	func numPad(numPad: NumPad, itemTapped item: Item, atPosition position: Position) {}
-	func numPad(numPad: NumPad, sizeForItemAtPosition position: Position) -> CGSize { return CGSize() }
+	func numPad(numPad: NumPad, sizeForItemAtPosition position: Position) -> CGSize
+	{
+		let width = round((numPad.frame.size.width) / CGFloat(numPad.coloumCount))
+		let height = round((numPad.frame.size.height) / CGFloat(numPad.rowCount))
+		return CGSizeMake(width, height)
+	}
 }
 
 // MARK: - NumPad
@@ -74,18 +79,29 @@ public class NumPad: UIView {
 	//    func numPad(numPad: NumPad, numberOfColumnsInRow row: Row) -> Int
 	
 	// default numbers
-	var buttonTitles: [[String]] = [[  "7", "8", "9" ],
-	                                [  "4", "5", "6" ],
-	                                [  "1", "2", "3" ],
-	                                [  "C", "0", "00"]]
-	{
+	var buttonTitles: [[String]] = [[""]]
+		{
 		didSet
 		{
 			self.collectionView.reloadData()
 		}
 	}
 	
+	public override var tintColor: UIColor!
+		{
+		didSet
+		{
+			self.collectionView.reloadData()
+		}
+	}
+	
+	public func reloadButtonTitles()
+	{
+		self.collectionView.reloadData()
+	}
+	
 	lazy var collectionView: UICollectionView = { [unowned self] in
+		
 		let layout = UICollectionViewFlowLayout()
 		layout.minimumLineSpacing = 0
 		layout.minimumInteritemSpacing = 0
@@ -143,7 +159,6 @@ extension NumPad {
 	func position(forIndexPath indexPath: NSIndexPath) -> Position {
 		return Position(row: indexPath.section, column: indexPath.item)
 	}
-	
 }
 
 // MARK: - CollectionView
@@ -165,24 +180,26 @@ extension CollectionView: UICollectionViewDataSource {
 	}
 	
 	func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
-	
+		
 		let position = numPad.position(forIndexPath: indexPath)
 		let cell = collectionView.dequeueReusableCellWithReuseIdentifier(String(Cell), forIndexPath: indexPath) as! Cell
 		let item = numPad.dataSource?.numPad(numPad, itemAtPosition: position) ?? Item()
 		cell.item = item
+		cell.clipsToBounds = true
+		cell.contentView.clipsToBounds = true
 		
 		cell.buttonTapped = { [unowned self] _ in
 			self.numPad.delegate?.numPad(self.numPad, itemTapped: item, atPosition: position)
 		}
 		return cell
 	}
-	
 }
 
 // MARK: - UICollectionViewDelegateFlowLayout
 extension CollectionView: UICollectionViewDelegateFlowLayout {
 	
 	func collectionView(collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAtIndexPath indexPath: NSIndexPath) -> CGSize {
+		
 		let position = numPad.position(forIndexPath: indexPath)
 		let size = numPad.delegate?.numPad(numPad, sizeForItemAtPosition: position) ?? CGSize()
 		
@@ -190,25 +207,22 @@ extension CollectionView: UICollectionViewDelegateFlowLayout {
 			let indexPath = numPad.indexPath(forPosition: position)
 			var size = collectionView.frame.size
 			
-			let sectionCount = CGFloat(self.numberOfSectionsInCollectionView(self))
-			let rowCount = CGFloat(self.collectionView(self, numberOfItemsInSection: indexPath.section))
-			
-			size.width = size.width / rowCount
-			size.height = size.height / sectionCount
+			size.width = (collectionView.frame.size.width) / CGFloat(numPad.coloumCount)
+			size.height = (collectionView.frame.size.height) / CGFloat(numPad.rowCount)
 			return size
 			}()
 	}
-	
 }
 
 // MARK: - Cell
 class Cell: UICollectionViewCell {
 	
 	lazy var button: UIButton = { [unowned self] in
-	
+		
 		let button = UIButton(type: .Custom)
 		button.titleLabel?.textAlignment = .Center
-		button.titleLabel?.numberOfLines = 4
+		button.titleLabel?.numberOfLines = 2
+		button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 10)
 		button.translatesAutoresizingMaskIntoConstraints = false
 		button.addTarget(self, action: #selector(_buttonTapped), forControlEvents: .TouchUpInside)
 		self.contentView.addSubview(button)
@@ -219,7 +233,7 @@ class Cell: UICollectionViewCell {
 		}()
 	
 	var item: Item!
-	{
+		{
 		didSet
 		{
 			button.setTitle(item.title, forState: .Normal)
@@ -233,7 +247,11 @@ class Cell: UICollectionViewCell {
 			button.setBackgroundImage(image, forState: .Highlighted)
 			button.setBackgroundImage(image, forState: .Selected)
 			button.tintColor = item.titleColor
-
+			
+			if item.title!.isEmpty
+			{
+				button.enabled = false
+			}
 		}
 	}
 	
@@ -271,22 +289,61 @@ extension CGSize {
 
 // custom
 // MARK: - NumPadDelegate
-public protocol FormattedNumPadDelegate: class {
+@objc public protocol FormattedNumPadDelegate: class {
 	
 	/// The item was tapped handler.
-	func numPad(numPad: FormattedNumPad, valueChanged value: Double)
-	func numPad(numPad: FormattedNumPad, buttonTapped title: String)
+	optional func numPad(numPad: FormattedNumPad, valueChanged value: Double)
+	optional func numPad(numPad: FormattedNumPad, numericButtonTapped title: String)
+	optional func numPad(numPad: FormattedNumPad, nonNumericButtonTapped title: String)
 }
 
 
 public class FormattedNumPad: UIView,  NumPadDelegate, NumPadDataSource
 {
+	public class func createDecimalTypePad(usingDecimalSeparator separator: String) -> [[String]]
+	{
+		return [["7", "8", "9"],
+		        ["4", "5", "6"],
+		        ["1", "2", "3"],
+		        ["C", separator, "0"]]
+	}
+	
+	public class var nonDecimalTypePad: [[String]]
+	{
+		return [["7", "8", "9"],
+		        ["4", "5", "6"],
+		        ["1", "2", "3"],
+		        ["C", "0", "00"]]
+	}
+	
 	public var delegate: FormattedNumPadDelegate? = nil
 	public var numberFormatter: NSNumberFormatter!
 	public var autoDecimal: Bool = true
 	
+	public var buttonFont: UIFont? = nil
+		{
+		didSet
+		{
+			if let font = buttonFont
+			{
+				self.nonNumericButtonFont = UIFont(name: font.fontName, size: font.pointSize - 3)
+				return
+			}
+			
+			self.numPad.reloadButtonTitles()
+		}
+	}
+	
+	private var nonNumericButtonFont: UIFont?
+		{
+		didSet
+		{
+			self.numPad.reloadButtonTitles()
+		}
+	}
+	
 	public var buttonTitles: [[String]]
-	{
+		{
 		set
 		{
 			numPad.buttonTitles = newValue
@@ -298,26 +355,36 @@ public class FormattedNumPad: UIView,  NumPadDelegate, NumPadDataSource
 		}
 	}
 	
-	private var clear: Bool = true
+	public var clear: Bool = true
 	public var externalTextField: UITextField? = nil
-	{
+		{
 		didSet
 		{
-			// remove internal Text field
-			self.textField.removeFromSuperview()
+			for constraint in self.containerView.constraints
+			{
+				if constraint.firstAttribute == .Height ||
+					constraint.firstAttribute == .Top ||
+					constraint.firstAttribute == .Bottom
+				{
+					constraint.constant = 0.0
+				}
+			}
 			
-			if self.textField.tag == 1 { return }
-			self.textField.tag = 1
-			
-			let views = ["containerView": containerView, "numPad": numPad]
-			self.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[containerView]|", options: [], metrics: nil, views: views))
-			containerView.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[numPad]|", options: [], metrics: nil, views: views))
+			for constraint in self.textField.constraints
+			{
+				if constraint.firstAttribute == .Height ||
+					constraint.firstAttribute == .Top ||
+					constraint.firstAttribute == .Bottom
+				{
+					constraint.constant = 0.0
+				}
+			}
 			
 			self.clear = true
 		}
 	}
 	
-	private var editingTextField: UITextField
+	public var editingTextField: UITextField
 	{
 		return self.externalTextField ?? self.textField
 	}
@@ -337,8 +404,9 @@ public class FormattedNumPad: UIView,  NumPadDelegate, NumPadDataSource
 		let textField = UITextField()
 		textField.translatesAutoresizingMaskIntoConstraints = false
 		textField.textAlignment = .Right
+		textField.adjustsFontSizeToFitWidth = true
 		textField.textColor = UIColor(white: 0.3, alpha: 1)
-		textField.font = .systemFontOfSize(40)
+		textField.font = .boldSystemFontOfSize(40)
 		textField.placeholder = self.numberFormatter.stringFromNumber(0.0)
 		textField.enabled = false
 		self.containerView.addSubview(textField)
@@ -381,13 +449,14 @@ public class FormattedNumPad: UIView,  NumPadDelegate, NumPadDataSource
 		let views = ["containerView": containerView, "textField": textField, "numPad": numPad]
 		self.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("H:|[containerView]|", options: [], metrics: nil, views: views))
 		self.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[containerView]|", options: [], metrics: nil, views: views))
+		
 		containerView.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("H:|-20-[textField]-20-|", options: [], metrics: nil, views: views))
+		containerView.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|-20-[textField(60)][numPad]|", options: [], metrics: nil, views: views))
 		containerView.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("H:|[numPad]|", options: [], metrics: nil, views: views))
-		containerView.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|-20-[textField(==60)][numPad]|", options: [], metrics: nil, views: views))
 	}
 	
 	public var doubleValue: Double
-	{
+		{
 		set
 		{
 			if newValue == 0.0
@@ -403,8 +472,10 @@ public class FormattedNumPad: UIView,  NumPadDelegate, NumPadDataSource
 		get
 		{
 			let rawString = self.editingTextField.text!.isEmpty ? "0" : self.editingTextField.text!
-			let sanitizedString = self.autoDecimal ? self.sanitizedString(rawString) : rawString
+			let sanitizedString = self.autoDecimal ? self.sanitizedString(rawString) :  self.removeNonDigitCharacter(rawString)
 			let digits = NSDecimalNumber(string: sanitizedString)
+			
+			print("raw sTring:", rawString, "Sanitized String: \(sanitizedString)")
 			
 			if self.autoDecimal
 			{
@@ -412,9 +483,14 @@ public class FormattedNumPad: UIView,  NumPadDelegate, NumPadDataSource
 				return digits.decimalNumberByDividingBy(decimalPlace).doubleValue
 			}
 			
-			print("Sanitized String: \(sanitizedString)")
 			return self.numberFormatter.numberFromString(sanitizedString)!.doubleValue
 		}
+	}
+	
+	private func removeNonDigitCharacter(string: String) -> String
+	{
+		let set = NSCharacterSet(charactersInString: "1234567890.").invertedSet
+		return string.componentsSeparatedByCharactersInSet(set).joinWithSeparator("")
 	}
 	
 	private func sanitizedString(string: String) -> String
@@ -431,52 +507,52 @@ public class FormattedNumPad: UIView,  NumPadDelegate, NumPadDataSource
 		{
 		case "C":
 			self.editingTextField.text = nil
-			break
+			self.delegate?.numPad?(self, nonNumericButtonTapped: item.title!)
+			return
 			
 		default:
-		
+			
+			// non numeric
+			if Double(item.title!) == nil && item.title! != self.numberFormatter.decimalSeparator
+			{
+				self.delegate?.numPad?(self, nonNumericButtonTapped: item.title!)
+				return
+			}
+			
 			if clear
 			{
 				self.editingTextField.text = nil
 				self.clear = false
 			}
 			
-		
 			let item = numPad.item(forPosition: position)!
 			var rawString = self.editingTextField.text! + item.title!
 			
-			// non numeric
-			print("\(Double(item.title!))")
-			if Double(item.title!) == nil
-			{
-				self.delegate?.numPad(self, buttonTapped: item.title!)
-				return
-			}
-		
 			if self.autoDecimal
 			{
 				if Double(rawString) == 0.0
 				{
 					self.editingTextField.text = nil
-					
 				}
 				else
 				{
-					if item.title! == self.numberFormatter.decimalSeparator
+					// denominatin
+					if let number = Double(item.title!) where (number < 1.0 || number > 9.0) && (number != 0)
 					{
-						rawString = "0" + item.title!
+						let sum = self.doubleValue + number
+						rawString = self.numberFormatter.stringFromNumber(sum)!
 					}
 					
 					self.editingTextField.text = rawString
 					self.editingTextField.text = self.numberFormatter.stringFromNumber(self.doubleValue)
 				}
 			}
-			
-			// raw
+				
+				// raw
 			else
 			{
 				if item.title! == self.numberFormatter.decimalSeparator &&
-				   self.editingTextField.text!.containsString(self.numberFormatter.decimalSeparator)
+					self.editingTextField.text!.containsString(self.numberFormatter.decimalSeparator)
 				{
 					return
 				}
@@ -485,7 +561,7 @@ public class FormattedNumPad: UIView,  NumPadDelegate, NumPadDataSource
 				{
 					rawString = "0" + item.title!
 				}
-			
+				
 				if Int(rawString) == 0
 				{
 					self.editingTextField.text = nil
@@ -497,32 +573,43 @@ public class FormattedNumPad: UIView,  NumPadDelegate, NumPadDataSource
 			}
 		}
 		
-		self.delegate?.numPad(self, buttonTapped: item.title!)
-		self.delegate?.numPad(self, valueChanged: self.doubleValue)
+		self.delegate?.numPad?(self, numericButtonTapped: item.title!)
+		self.delegate?.numPad?(self, valueChanged: self.doubleValue)
 	}
 	
-	public func numPad(numPad: NumPad, itemAtPosition position: Position) -> Item {
-		
+	public func numPad(numPad: NumPad, itemAtPosition position: Position) -> Item
+	{
 		var item = Item()
 		item.title = numPad.buttonTitles[position.row][position.column]
+		
+		// non numeric
+		if Double(item.title!) == nil && item.title! != self.numberFormatter.decimalSeparator
+		{
+			item.font = self.nonNumericButtonFont ?? self.buttonFont
+		}
+		else
+		{
+			item.font = self.buttonFont
+		}
 		
 		if let _ = Double(item.title!)
 		{
 			item.titleColor = UIColor(white: 0.3, alpha: 1)
 		}
-		
-		else if item.title! == "C"
+			
+		else if item.title! == self.numberFormatter.decimalSeparator
 		{
-			item.titleColor = .orangeColor()
+			item.titleColor = UIColor(white: 0.3, alpha: 1)
 		}
-		
+			
 		else
 		{
-			item.titleColor = UIColor(white: 1, alpha: 1)
-			item.backgroundColor = UIColor.orangeColor()
+			print("title:", item.title)
+			item.titleColor = numPad.tintColor
+			item.backgroundColor = .whiteColor()
 		}
 		
-		item.font = .systemFontOfSize(20)
+		// item.font = .systemFontOfSize(20)
 		return item
 	}
 }
