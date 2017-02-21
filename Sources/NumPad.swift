@@ -316,7 +316,7 @@ public class FormattedNumPad: UIView,  NumPadDelegate, NumPadDataSource
 		        ["C", "0", "00"]]
 	}
 	
-	public var delegate: FormattedNumPadDelegate? = nil
+	public weak var delegate: FormattedNumPadDelegate? = nil
 	public var numberFormatter: NSNumberFormatter!
 	public var autoDecimal: Bool = true
 	
