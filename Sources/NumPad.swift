@@ -188,8 +188,11 @@ extension CollectionView: UICollectionViewDataSource {
 		cell.clipsToBounds = true
 		cell.contentView.clipsToBounds = true
 		
-		cell.buttonTapped = { [unowned self] _ in
-			self.numPad.delegate?.numPad(self.numPad, itemTapped: item, atPosition: position)
+		cell.buttonTapped = { [weak self] _ in
+       		  if let s = self
+	          {
+                     s.numPad.delegate?.numPad(s.numPad, itemTapped: item, atPosition: position)
+                   }
 		}
 		return cell
 	}
