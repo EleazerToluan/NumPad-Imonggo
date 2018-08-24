@@ -20,7 +20,7 @@ class ViewController: UIViewController, FormattedNumPadDelegate
 		self.numpadContainer.externalTextField = self.externalTF
 	}
 	
-	override func viewDidAppear(animated: Bool)
+	override func viewDidAppear(_ animated: Bool)
 	{
 		super.viewDidAppear(animated)
 		
@@ -35,13 +35,13 @@ class ViewController: UIViewController, FormattedNumPadDelegate
 		// self.numpadContainer.autoDecimal = false
 	}
 	
-	func numPad(numPad: FormattedNumPad, valueChanged value: Double)
+	func numPad(_ numPad: FormattedNumPad, valueChanged value: Double)
 	{
 		// numPad.externalTextField?.text = "\(numPad.externalTextField!.text!)%"
 		print("double value: '\(value)'")
 	}
 	
-	func numPad(numPad: FormattedNumPad, buttonTapped title: String)
+	func numPad(_ numPad: FormattedNumPad, buttonTapped title: String)
 	{
 		print("title: \(title)")
 	}
